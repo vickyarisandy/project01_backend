@@ -67,3 +67,24 @@ The Laravel framework is open-sourced software licensed under the [MIT license](
 ## backend
 
 Ini adalah backend untuk endpoint
+
+
+```ags1
+groping
+((1)) 
+- User
+- Wallet
+- Tip
+((2))
+- operator card
+- data plan
+- data plan history
+((3))
+- all transactio
+
+```
+
+```ags1
+make model
+ php artisan make:model
+```
