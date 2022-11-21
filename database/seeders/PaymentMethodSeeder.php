@@ -14,7 +14,7 @@ class PaymentMethodSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('payment_method')->insert([
+        DB::table('payment_methods')->insert([
             [
                 'name' => 'Wallet',
                 'code' => 'bank',
