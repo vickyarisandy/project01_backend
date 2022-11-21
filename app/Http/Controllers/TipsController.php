@@ -2,13 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use JWTAuth;
 use App\Models\Tip;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+
 
 
 class TipsController extends Controller
 {
+    protected $user;
+
+
+    public function __construct()
+    {
+        $this->user = JWTAuth::parseToken()->authenticate();
+        
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -16,10 +28,28 @@ class TipsController extends Controller
      */
     public function index()
     {
+        $user = auth()->user();
+        $token = Auth::login($user);
+
+        if(is_null($token)){
+            return response()->json([
+                'data'=> 'gagal',
+            ]);
+        }
+
         $tips =Tip::paginate(5);
         return response()->json([
             'data'=> $tips,
+            'options' => [
+                'username' => $user->username, 
+                'token' => $token,
+            ] 
+            
         ]);
+        
+        
+
+        
     }
 
     /**
@@ -30,13 +60,30 @@ class TipsController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $token = Auth::login($user);
+
+        $validator = Validator::make($request->all(),[
+            'title' => 'required|string|max:255',
+            'thumbnail' => 'required',
+            'url' => 'required',
+        ]);
+
+        if($validator->fails()){
+            return response()->json($validator->errors());       
+        }
+
         $tips = Tip::create([
             'title' => $request->title,
             'thumbnail' => $request->thumbnail,
             'url' => $request->url,
         ]);
+
+
+
         return response()->json([
             'data' => $tips,
+            'token' => $token,
         ]);
     }
 
@@ -85,6 +132,7 @@ class TipsController extends Controller
             return response()->json($validator->errors());       
         }
 
+        $tips = Tip::find($id);
         $tips->title = $request->title;
         $tips->thumbnail = $request->thumbnail;
         $tips->url = $request->url;
