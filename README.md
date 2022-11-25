@@ -88,3 +88,18 @@ groping
 make model
  php artisan make:model
 ```
+
+```ags1
+
+https://simulator.sandbox.midtrans.com/bca/va/index
+
+https://simulator.sandbox.midtrans.com/bri/va/index
+```
+
+## Testing pembayaran Top Up 
+
+anda bisa memasukan akun virtual akun ke link berikut :
+
+- BCA Virtual Akun : https://simulator.sandbox.midtrans.com/bca/va/index
+- BRI Virtual Akun : https://simulator.sandbox.midtrans.com/bri/va/index 
+- BNI Virtual Akun : https://simulator.sandbox.midtrans.com/bni/va/index

@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use App\Services\PayUService\Exception;
+
 
 class AuthController extends Controller
 {
@@ -16,39 +18,96 @@ class AuthController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth:api', ['except' => ['login','register']]);
+        $this->middleware('auth:api', ['except' => ['login','register','check_email']]);
+    }
+
+    public function check_email(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'email'=>'required|email|unique:users'
+            ]);
+
+            if($validator->fails()){
+                return response()->json($validator->messages());
+            }else{
+                return response()->json(['email' => ['The email ready .']]);
+            }
+        } catch (\Throwable $th) {
+            // return response()->json(['message'=> $th->getMessage()]);
+            return response()->json(['message'=> 'Cek Service DB']);
+        }
     }
 
     public function register()
     {
-        $validator = Validator::make(request()->all(),[
-            'name' => 'required',
-            'email' =>'required|email|unique:users',
-            'username' =>'required',
-            'password' =>'required',
-            'profile_picture' =>'required',
-            'ktp' =>'required',
-        ]);
+        try {
+            // $this->buildXMLHeader();
+            $validator = Validator::make(request()->all(),[
+                'name' => 'required',
+                'email' =>'required|email|unique:users',
+                'username' =>'required',
+                'password' =>'required',
+                'profile_picture' =>'required',
+                'ktp' =>'required',
+            ]);
+    
+            if($validator->fails()){
+                // return response()->json(['message' => 'pendaftaran gagal']);
+                return response()->json($validator->messages());
+            }
+    
+            $user = User::create([
+                'name' => request('name'),
+                'email' => request('email'),
+                'username' => request('username'),
+                'password' => Hash::make(request('password')),
+                'profile_picture' => request('profile_picture'),
+                'ktp' => request('ktp'),
+            ]);
 
-        if($validator->fails()){
-            // return response()->json(['message' => 'pendaftaran gagal']);
-            return response()->json($validator->messages());
+            //generate show token
+            $credentials = request(['email', 'password']);
+
+            if (! $token = auth()->attempt($credentials)) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $res = ([
+                'message' => 'Pendaftaran Berhasil',
+                'name' => request('name'),
+                'email' => request('email'),
+                'username' => request('username'),
+                'password' => Hash::make(request('password')),
+                'profile_picture' => request('profile_picture'),
+                'ktp' => request('ktp'),
+                'token' => $token,
+                'token_expires_in'=> auth()->factory()->getTTL() * 60,
+                'token_type' => 'bearer',
+            ]);
+    
+    
+            if($user){
+                // return response()->json($user->messages());
+                return response()->json($res);
+            }else{
+                return response()->json(['message' => 'Pendaftaran Gagal']);
+            }
+
+        } catch (\Throwable $th) {
+            return response()->json(['message'=> $th->getMessage()]);
+             return response()->json(['message'=> 'Cek Service DB']);
         }
+        // if ($e instanceof \Illuminate\Database\QueryException) {
+        //     dd($e->getMessage());
+        //     //return response()->view('custom_view');
+        // } elseif ($e instanceof \PDOException) {
+        //     dd($e->getMessage());
+        //     return response()->json(['message' => 'else kondisi']);
+        //     //return response()->view('custom_view');
+        // }
 
-        $user = User::create([
-            'name' => request('name'),
-            'email' => request('email'),
-            'username' => request('username'),
-            'password' => Hash::make(request('password')),
-            'profile_picture' => request('profile_picture'),
-            'ktp' => request('ktp'),
-        ]);
-
-        if($user){
-            return response()->json(['message' => 'Pendaftaran Berhasil']);
-        }else{
-            return response()->json(['message' => 'Pendaftaran Gagal']);
-        }
+       
     }
 
     /**
@@ -58,13 +117,32 @@ class AuthController extends Controller
      */
     public function login()
     {
-        $credentials = request(['email', 'password']);
+        try {
+            $credentials = request(['email', 'password']);
 
-        if (! $token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+            if (! $token = auth()->attempt($credentials)) {
+                return response()->json(['error' => 'Unauthorized'], 401);
+            }
+
+            $res = ([
+                'message' => 'Pendaftaran Berhasil',
+                'name' => auth()->user()->name,
+                'email' => auth()->user()->email,
+                'username' => auth()->user()->username,
+                'profile_picture' => auth()->user()->profile_picture,
+                'ktp' => auth()->user()->ktp,
+                'token' => $token,
+                'token_expires_in'=> auth()->factory()->getTTL() * 60,
+                'token_type' => 'bearer',
+            ]);
+    
+            // return $this->respondWithToken($token);    
+            return response()->json($res);
+        } catch (\Throwable $th) {
+            return response()->json(['message'=> $th->getMessage()]);
+            // return response()->json(['message'=> 'Cek Service DB']); 
         }
-
-        return $this->respondWithToken($token);
+        
     }
 
     /**
@@ -74,7 +152,12 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth()->user());
+        try {
+            return response()->json(auth()->user());
+        } catch (\Throwable $th) {
+            return response()->json(['message'=> 'Cek Service DB']);
+        }
+        
     }
 
     /**
@@ -84,9 +167,13 @@ class AuthController extends Controller
      */
     public function logout()
     {
-        auth()->logout();
-
-        return response()->json(['message' => 'Successfully logged out']);
+        try {
+            auth()->logout();
+            return response()->json(['message' => 'Successfully logged out']);
+        } catch (\Throwable $th) {
+            return response()->json(['message'=> 'Cek Service DB']);
+        }
+        
     }
 
     /**
@@ -109,7 +196,7 @@ class AuthController extends Controller
     protected function respondWithToken($token)
     {
         return response()->json([
-            'access_token' => $token,
+            'token' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60 //expaid 60 menit
         ]);

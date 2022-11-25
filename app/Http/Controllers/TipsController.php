@@ -132,6 +132,7 @@ class TipsController extends Controller
             return response()->json($validator->errors());       
         }
 
+        //update to db
         $tips = Tip::find($id);
         $tips->title = $request->title;
         $tips->thumbnail = $request->thumbnail;

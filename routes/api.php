@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TipsController;
+use App\Http\Controllers\PaymentMethodController;
+use App\Http\Controllers\TranscationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -17,13 +19,18 @@ use App\Http\Controllers\TipsController;
 
 Route::group(['middleware' => 'api','prefix' => 'auth'], function ($router) {
     Route::post('register', [AuthController::class, 'register']);
+    Route::post('cek_email', [AuthController::class, 'check_email']);
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('refresh', [AuthController::class, 'refresh']);
     Route::post('me', [AuthController::class, 'me']);
+    Route::get('payment_methods',[PaymentMethodController::class,'index']);
 
 });
 
+
+
 Route::resource('tips', TipsController::class);
+Route::post('top_ups', [TranscationController::class,'index']);
 
 

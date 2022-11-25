@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\TranscationController;
+use App\Http\Controllers\TopupController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -16,3 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Route::get('/midtrans/pay', [TopupController::class, 'getPayment'])->name('home');
+Route::post('/midtrans/pay', [TranscationController::class, 'getPayment'])->name('home');
